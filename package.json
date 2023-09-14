@@ -6,5 +6,6 @@
         "start": "node app"
     },
     "dependencies": {
+        "mailgun": "^0.5.0"
     }
 }

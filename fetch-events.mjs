@@ -23,6 +23,7 @@ export default async function fetchPagedEvents(options) {
             begin: date.toGMTString(), // Sun, 31 Oct 2021 22:00:00 GMT
             // ascending: 'yes',
             event: 'failed',
+            severity: 'permanent',
             limit: options.limit || DEFAULT_EVENT_LIMIT
           };
           let events;

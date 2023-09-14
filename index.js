@@ -5,7 +5,7 @@ import fs from 'fs';
 console.log("App starting.");
 
 const events = await fetchAllEvents({
-    daysPast: 1
+    daysPast: 29
 });
 
 const domains = getDomainReasons(events);

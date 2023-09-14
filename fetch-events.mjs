@@ -16,11 +16,14 @@ export default async function fetchPagedEvents(options) {
 
     try {
         // const date = new Date(2021, 10, 1, 0, 0, 0, 0); // Mon Nov 01 2021 00:00:00 GMT+0200
-        const date = new Date();
-        date.setDate(date.getDate() - options.daysPast || 0);
+        const beginDate = new Date();
+        beginDate.setDate(beginDate.getDate() - options.daysPast || 0);
+        // TODO: allow specify in options
+        const endDate = new Date();
   
         const mailgunOptions = {
-            begin: date.toGMTString(), // Sun, 31 Oct 2021 22:00:00 GMT
+            begin: beginDate.toGMTString(), // Sun, 31 Oct 2021 22:00:00 GMT
+            end: endDate.toGMTString(),
             // ascending: 'yes',
             event: 'failed',
             severity: 'permanent',
@@ -32,7 +35,7 @@ export default async function fetchPagedEvents(options) {
             console.log(`${events.items.length} events on next page.`);
           } else {
             events = await client.events.get(DOMAIN, mailgunOptions);
-            console.log(`Fetched ${events.items.length} events for ${date}.`);
+            console.log(`Fetched ${events.items.length} events for ${beginDate}.`);
           }
         
         return events;
@@ -56,7 +59,10 @@ export async function fetchAllEvents(options) {
     while(events?.pages?.next) {
 
         // stop if we happened to have run out of events
-        if(events.items.length === 0) break;
+        if(events.items.length === 0) {
+            console.log(`Retrieved 0 items. Stopping.`);
+            break;
+        }
 
         iterationCount++;
         events = await fetchPagedEvents({
@@ -65,7 +71,10 @@ export async function fetchAllEvents(options) {
         allEvents.push(...events.items);
 
         // stop if there's (hopefully) no more events to grab
-        if(events.items.length < options.limit || DEFAULT_EVENT_LIMIT) break;
+        if(events.items.length < (options.limit || DEFAULT_EVENT_LIMIT)) {
+            console.log(`Retrieved ${events.items.length}. Stopping.`);
+            break;
+        }
     }
 
     console.log(`${iterationCount} iterations retrieved ${allEvents.length} total events.`);

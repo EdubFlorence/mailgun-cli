@@ -8,6 +8,7 @@ function abbreviateReason(reason) {
         '5.4.1 Recipient address rejected: Access denied.',
         '5.4.14 Hop count exceeded - possible mail loop ATTR34',
         '5.5.0 Requested action not taken: mailbox unavailable',
+        '550 DMARC Sender Invalid - envelope rejected',
     ]
     errorCodes.forEach(errorCode => {
         if(reason.indexOf(errorCode) > -1) {

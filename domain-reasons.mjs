@@ -1,22 +1,59 @@
 function abbreviateReason(reason) {
 
     const errorCodes = [
+        'unable to connect to MX servers',
         '5.1.1 The email account that you tried to reach does not exist.',
         '5.1.10 RESOLVER.ADR.RecipientNotFound',
         '5.2.1 The email account that you tried to reach is disabled.',
         '5.2.2 mailbox full',
         '5.4.1 Recipient address rejected: Access denied.',
-        '5.4.14 Hop count exceeded - possible mail loop ATTR34',
+        '5.4.12 smtp; hop count exceeded - possible mail loop',
+        '5.4.14 Hop count exceeded - possible mail loop',
         '5.5.0 Requested action not taken: mailbox unavailable',
+        '5.7.1 transport.rules.rejectmessage; the message was rejected by organization policy',
         '550 DMARC Sender Invalid - envelope rejected',
+        '550 5.7.1 this message failed dmarc evaluation of domain researchbinders.com',
+        'please turn on smtp authentication in your mail client',
     ]
     errorCodes.forEach(errorCode => {
-        if(reason.indexOf(errorCode) > -1) {
+        if(reason.toLowerCase().indexOf(errorCode.toLowerCase()) > -1) {
             reason = errorCode;
         }
     });
 
     return reason;
+}
+
+function getReason(event) {
+
+    const message = event['delivery-status']?.description 
+    || event['delivery-status']?.message 
+    || '';
+    const reason = abbreviateReason(message);
+
+    return reason;
+}
+
+function reasonIsUserNotFound(reason) {
+
+    return reason.indexOf('user unknown') > -1
+            || reason.indexOf('mailbox unavailable') > -1
+            || reason.indexOf('mailbox full') > -1
+            || reason.indexOf('mailbox not found') > -1
+            || reason.indexOf('addressee unknown') > -1
+            || reason.indexOf('recipient not found') > -1
+            || reason.indexOf('invalid recipient') > -1
+            || reason.indexOf('no such recipient') > -1
+            || reason.indexOf('address rejected') > -1
+            || reason.indexOf('recipientnotfound') > -1
+            || reason.indexOf('this mailbox is disabled') > -1
+            || reason.indexOf('over quota') > -1
+            || reason.indexOf('recipient rejected') > -1
+            || reason.indexOf('email account that you tried to reach is disabled') > -1
+            || reason.indexOf('is not a valid user') > -1
+            || reason.indexOf('user does not exist') > -1
+            || reason.indexOf('intended recipients no longer have') > -1
+            || reason.indexOf('email account that you tried to reach does not exist') > -1;
 }
 
 export default function getDomainReasons(events) {
@@ -25,16 +62,8 @@ export default function getDomainReasons(events) {
     events.forEach(event => {
     
         const domain = event['recipient-domain'];
-    
-        if(!domain.length) {
-            console.warn(`No domain for event.`);
-            return;
-        }
-    
-        const message = event['delivery-status']?.description 
-            || event['delivery-status']?.message 
-            || '';
-        const reason = abbreviateReason(message);
+        const reason = getReason(event).toLowerCase();
+
         if(!domains[domain]) {
             domains[domain] = {
                 reasons: []
@@ -46,4 +75,37 @@ export default function getDomainReasons(events) {
     });
 
     return domains;
+}
+
+export function getReasons(events) {
+
+    const reasons = {};
+    events.forEach(event => {
+    
+        const domain = event['recipient-domain'];
+        let reason = getReason(event).toLowerCase();
+
+        if(reason.indexOf(' mx for ') > -1
+        || reason.indexOf('unable to connect to mx servers') > -1) {
+            reason = 'no mx';
+        }
+
+        if(reasonIsUserNotFound(reason)
+            || reason.indexOf('this is the mail system at host') > -1
+            || reason.length == 0) {
+            return;
+        }
+
+        if(!reasons[reason]) {
+            reasons[reason] = {
+                domains: []
+            };
+        }
+
+        if(!reasons[reason].domains.includes(domain)) {
+            reasons[reason].domains.push(domain);
+        }
+    });
+
+    return reasons;
 }

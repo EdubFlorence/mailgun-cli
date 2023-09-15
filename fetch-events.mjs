@@ -6,6 +6,8 @@ dotenv.config();
 const DOMAIN = 'researchbinders.com';
 const API_KEY = process.env.MAILGUN_KEY;
 
+// https://documentation.mailgun.com/en/latest/api_reference.html#mailgun-api-reference
+
 const DEFAULT_EVENT_LIMIT = 300;    // this also happens to be the max :)
 
 const mailgun = new Mailgun(formData);

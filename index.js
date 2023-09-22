@@ -14,6 +14,7 @@ console.log("App starting.");
 async function getEvents() {
 
     let events;
+    // later, we could theoretically add a date created check
     if(READ_EVENTS_IF_FILE_EXISTS
         && fs.existsSync(EVENTS_FILE)) {
     
@@ -31,7 +32,12 @@ async function getEvents() {
 
 const events = await getEvents();
 
-const domains = getDomainReasons(events);
+const domainReasonOptions = {
+    ignoreRecipientErrors: true,
+    ignoreMxErrors: true,
+    ignoreOld: true
+};
+const domains = getDomainReasons(events, domainReasonOptions);
 const reasons = getReasons(events);
 
 try {

@@ -1,4 +1,4 @@
-import getDomainReasons, { getReasons } from './domain-reasons.mjs';
+import getDomainReasons, { getReasons, getAsCSV } from './domain-reasons.mjs';
 import { fetchAllEvents } from './fetch-events.mjs';
 import fs from 'fs';
 
@@ -7,6 +7,7 @@ const OUTPUT_DIR = './output';
 const EVENTS_FILE = `${OUTPUT_DIR}/events.json`;
 const DOMAINS_FILE = `${OUTPUT_DIR}/domains.json`;
 const REASONS_FILE = `${OUTPUT_DIR}/reasons.json`;
+const DOMAINS_CSV = `${OUTPUT_DIR}/domains.csv`;
 let didFetchEvents = false;
 
 console.log("App starting.");
@@ -39,6 +40,7 @@ const domainReasonOptions = {
 };
 const domains = getDomainReasons(events, domainReasonOptions);
 const reasons = getReasons(events);
+const domainsCSV = getAsCSV(domains);
 
 try {
     if(!fs.existsSync(OUTPUT_DIR)){
@@ -49,6 +51,7 @@ try {
     }
     fs.writeFileSync(DOMAINS_FILE, JSON.stringify(domains, null, 2));
     fs.writeFileSync(REASONS_FILE, JSON.stringify(reasons, null, 2));
+    fs.writeFileSync(DOMAINS_CSV, domainsCSV);
 } catch (ex) {
     console.error("Error writing files.");
     console.error(ex);

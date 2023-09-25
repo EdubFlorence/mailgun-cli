@@ -39,6 +39,7 @@ function reasonIsIndividual(reason) {
 
     return reasonIsUserNotFound(reason)
     || reason == "not delivering to previously bounced address"
+    || reason.indexOf('may not exist') > -1
 }
 
 function reasonIsUserNotFound(reason) {
@@ -168,4 +169,19 @@ export function getReasons(events) {
     });
 
     return reasons;
+}
+
+export function getAsCSV(domains) {
+
+    const domainNames = Object.keys(domains);
+    let csvString = 'domain,reason\n';
+
+    domainNames.forEach(domainName => {
+        const domain = domains[domainName];
+        domain.reasons.forEach(reason => {
+            csvString += `${domainName},\"${reason}\"\n`;
+        });
+    });
+
+    return csvString;
 }
